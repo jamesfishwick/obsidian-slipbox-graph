@@ -78,48 +78,46 @@ export class SlipboxGraphView extends ItemView {
       this.updateVisibility();
     });
 
-    // Legend / filter toggles
+    // Legend -- one entry per link type, with color swatch + label
     const legend = container.createDiv({ cls: "slipbox-graph-legend" });
 
-    const families: { family: LinkFamily; label: string }[] = [
-      { family: "epistemic", label: "Epistemic" },
-      { family: "dialectic", label: "Dialectic" },
-      { family: "structural", label: "Structural" },
-      { family: "loose", label: "Loose" },
+    // De-duplicate by color+label (forward/inverse share color, show only forward)
+    const shownTypes: LinkType[] = [
+      "extends", "refines", "supports", "contradicts", "questions", "reference", "related",
     ];
 
-    for (const { family, label } of families) {
-      const familyTypes = Object.entries(LINK_STYLES)
-        .filter(([, s]) => s.family === family)
-        .map(([t]) => t as LinkType);
+    for (const linkType of shownTypes) {
+      const style = LINK_STYLES[linkType];
 
-      const representativeColor = LINK_STYLES[familyTypes[0]].color;
+      const chip = legend.createEl("button", { cls: "slipbox-graph-chip" });
 
-      const chip = legend.createEl("button", {
-        cls: "slipbox-graph-chip",
-        text: label,
-      });
-      chip.style.borderColor = representativeColor;
-      chip.style.color = representativeColor;
+      // Color swatch line
+      const swatch = chip.createEl("span", { cls: "slipbox-graph-swatch" });
+      swatch.style.backgroundColor = style.color;
+
+      chip.createEl("span", { text: style.label });
 
       chip.addEventListener("click", () => {
-        if (this.hiddenFamilies.has(family)) {
-          this.hiddenFamilies.delete(family);
-          familyTypes.forEach((t) => this.hiddenLinkTypes.delete(t));
+        // Toggle this type and its inverse
+        const inverseMap: Partial<Record<LinkType, LinkType>> = {
+          extends: "extended_by", refines: "refined_by",
+          supports: "supported_by", contradicts: "contradicted_by",
+          questions: "questioned_by",
+        };
+        const types = [linkType];
+        const inv = inverseMap[linkType];
+        if (inv) types.push(inv);
+
+        const isHidden = this.hiddenLinkTypes.has(linkType);
+        if (isHidden) {
+          types.forEach((t) => this.hiddenLinkTypes.delete(t));
           chip.removeClass("slipbox-graph-chip--hidden");
         } else {
-          this.hiddenFamilies.add(family);
-          familyTypes.forEach((t) => this.hiddenLinkTypes.add(t));
+          types.forEach((t) => this.hiddenLinkTypes.add(t));
           chip.addClass("slipbox-graph-chip--hidden");
         }
         this.updateVisibility();
       });
-
-      // Tooltip with specific types
-      chip.setAttribute(
-        "title",
-        familyTypes.map((t) => LINK_STYLES[t].label).join(", ")
-      );
     }
 
     // Refresh button
