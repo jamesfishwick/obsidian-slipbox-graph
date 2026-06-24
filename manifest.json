@@ -3,7 +3,8 @@
   "name": "Slipbox Semantic Graph",
   "version": "0.1.0",
   "minAppVersion": "1.5.0",
-  "description": "Force-directed graph view with human-readable titles and color-coded semantic link types",
+  "description": "Force-directed graph view with human-readable titles and color-coded semantic link types.",
   "author": "James Fishwick",
+  "authorUrl": "https://github.com/jamesfishwick",
   "isDesktopOnly": false
 }
